@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common'
-import { PrismaService } from '../prisma/prisma.service'
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class BoardsService {
@@ -7,13 +7,24 @@ export class BoardsService {
 
   create(title: string) {
     return this.prisma.board.create({
-      data: { title }
-    })
+      data: { title },
+    });
   }
 
   findAll() {
-    return this.prisma.board.findMany({
-      include: { tasks: true }
-    })
+    return this.prisma.board.findMany();
+  }
+
+  findOne(id: number) {
+    return this.prisma.board.findUnique({
+      where: { id },
+      include: { tasks: true },
+    });
+  }
+
+  remove(id: number) {
+    return this.prisma.board.delete({
+      where: { id },
+    });
   }
 }
