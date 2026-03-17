@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as argon from 'argon2';
 import { AuthDto } from './dto/auth.dto';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -20,10 +21,12 @@ export class AuthService {
     if (existing) throw new ForbiddenException('User already exists');
 
     const hash = await argon.hash(dto.password);
+
     const user = await this.prisma.user.create({
-      data: { email: dto.email, password: hash },
+      data: { email: dto.email, password: hash, role: Role.USER },
     });
-    return this.generateTokens(user.id, user.email);
+
+    return this.generateTokens(user.id, user.email, user.role);
   }
 
   async login(dto: AuthDto) {
@@ -35,15 +38,15 @@ export class AuthService {
     const pwMatches = await argon.verify(user.password, dto.password);
     if (!pwMatches) throw new ForbiddenException('Invalid credentials');
 
-    return this.generateTokens(user.id, user.email);
+    return this.generateTokens(user.id, user.email, user.role);
   }
 
-  async refresh(userId: number, email: string) {
-    return this.generateTokens(userId, email);
+  async refresh(userId: number, email: string, role: Role) {
+    return this.generateTokens(userId, email, role);
   }
 
-  async generateTokens(userId: number, email: string) {
-    const payload = { sub: userId, email };
+  private async generateTokens(userId: number, email: string, role: Role) {
+    const payload = { sub: userId, email, role };
     const accessToken = await this.jwt.signAsync(payload, {
       secret: this.config.get('JWT_ACCESS_SECRET'),
       expiresIn: this.config.get('JWT_ACCESS_EXPIRES'),

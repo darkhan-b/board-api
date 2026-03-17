@@ -5,10 +5,13 @@ import { PrismaService } from '../prisma/prisma.service';
 export class BoardsService {
   constructor(private prisma: PrismaService) {}
 
-  create(title: string) {
-    return this.prisma.board.create({
-      data: { title },
-    });
+  async create(title: string) {
+    try {
+      return await this.prisma.board.create({ data: { title } });
+    } catch (err) {
+      console.error('Prisma create board error:', err);
+      throw err;
+    }
   }
 
   findAll() {
@@ -22,9 +25,11 @@ export class BoardsService {
     });
   }
 
+  update(id: number, title: string) {
+    return this.prisma.board.update({ where: { id }, data: { title } });
+  }
+
   remove(id: number) {
-    return this.prisma.board.delete({
-      where: { id },
-    });
+    return this.prisma.board.delete({ where: { id } });
   }
 }

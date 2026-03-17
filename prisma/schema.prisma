@@ -18,6 +18,11 @@ enum TaskStatus {
   done
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model Board {
   id        Int      @id @default(autoincrement())
   title     String
@@ -41,8 +46,10 @@ model Task {
 }
 
 model User {
-  id    Int    @id @default(autoincrement())
-  email String @unique
+  id       Int    @id @default(autoincrement())
+  name     String?
+  email    String @unique
   password String
-  tasks Task[]
+  role     Role   @default(USER)
+  tasks    Task[]
 }

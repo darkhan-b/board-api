@@ -11,6 +11,7 @@ import express from 'express';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
+import { Public } from './decorators/public.decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -28,7 +29,7 @@ export class AuthController {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
   }
-
+  @Public()
   @Post('register')
   async register(
     @Body() dto: AuthDto,
@@ -38,7 +39,7 @@ export class AuthController {
     this.setCookie(res, tokens.refreshToken);
     return { accessToken: tokens.accessToken };
   }
-
+  @Public()
   @Post('login')
   async login(
     @Body() dto: AuthDto,
@@ -62,7 +63,11 @@ export class AuthController {
         secret: process.env.JWT_REFRESH_SECRET,
       });
 
-      const tokens = await this.authService.refresh(payload.sub, payload.email);
+      const tokens = await this.authService.refresh(
+        payload.sub,
+        payload.email,
+        payload.role,
+      );
       this.setCookie(res, tokens.refreshToken);
 
       return { accessToken: tokens.accessToken };

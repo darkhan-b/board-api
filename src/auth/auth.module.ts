@@ -19,9 +19,9 @@ import { JwtStrategy } from './jwt/jwt.strategy';
         signOptions: { expiresIn: config.get('JWT_ACCESS_EXPIRES') },
       }),
     }),
-    ConfigModule,
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
+  exports: [JwtModule], 
 })
 export class AuthModule {}
