@@ -17,20 +17,12 @@ export class AuthService {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
-
-    if (existing) {
-      throw new ForbiddenException('User already exists');
-    }
+    if (existing) throw new ForbiddenException('User already exists');
 
     const hash = await argon.hash(dto.password);
-
     const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        password: hash,
-      },
+      data: { email: dto.email, password: hash },
     });
-
     return this.generateTokens(user.id, user.email);
   }
 
@@ -38,11 +30,9 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
-
     if (!user) throw new ForbiddenException('Invalid credentials');
 
     const pwMatches = await argon.verify(user.password, dto.password);
-
     if (!pwMatches) throw new ForbiddenException('Invalid credentials');
 
     return this.generateTokens(user.id, user.email);
@@ -54,7 +44,6 @@ export class AuthService {
 
   async generateTokens(userId: number, email: string) {
     const payload = { sub: userId, email };
-
     const accessToken = await this.jwt.signAsync(payload, {
       secret: this.config.get('JWT_ACCESS_SECRET'),
       expiresIn: this.config.get('JWT_ACCESS_EXPIRES'),
@@ -65,9 +54,6 @@ export class AuthService {
       expiresIn: this.config.get('JWT_REFRESH_EXPIRES'),
     });
 
-    return {
-      accessToken,
-      refreshToken,
-    };
+    return { accessToken, refreshToken };
   }
 }

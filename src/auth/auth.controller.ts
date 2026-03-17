@@ -1,7 +1,7 @@
 import {
-  Body,
   Controller,
   Post,
+  Body,
   Req,
   Res,
   ForbiddenException,
@@ -35,9 +35,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: express.Response,
   ) {
     const tokens = await this.authService.register(dto);
-
     this.setCookie(res, tokens.refreshToken);
-
     return { accessToken: tokens.accessToken };
   }
 
@@ -47,9 +45,7 @@ export class AuthController {
     @Res({ passthrough: true }) res: express.Response,
   ) {
     const tokens = await this.authService.login(dto);
-
     this.setCookie(res, tokens.refreshToken);
-
     return { accessToken: tokens.accessToken };
   }
 
@@ -58,7 +54,6 @@ export class AuthController {
     @Req() req: express.Request,
     @Res({ passthrough: true }) res: express.Response,
   ) {
-    console.log('Refresh token from cookie:', req.cookies.refreshToken);
     const token = req.cookies?.refreshToken;
     if (!token) throw new ForbiddenException('No refresh token');
 
