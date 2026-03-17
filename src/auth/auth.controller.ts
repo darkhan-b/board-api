@@ -5,6 +5,8 @@ import {
   Req,
   Res,
   ForbiddenException,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import express from 'express';
@@ -26,9 +28,11 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'none',
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 дней
     });
   }
+
+  // -------------------- Публичные маршруты --------------------
   @Public()
   @Post('register')
   async register(
@@ -39,8 +43,10 @@ export class AuthController {
     this.setCookie(res, tokens.refreshToken);
     return { accessToken: tokens.accessToken };
   }
+
   @Public()
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   async login(
     @Body() dto: AuthDto,
     @Res({ passthrough: true }) res: express.Response,
@@ -50,6 +56,7 @@ export class AuthController {
     return { accessToken: tokens.accessToken };
   }
 
+  // -------------------- Защищённые маршруты --------------------
   @Post('refresh')
   async refresh(
     @Req() req: express.Request,
@@ -77,7 +84,7 @@ export class AuthController {
   }
 
   @Post('logout')
-  logout(@Res({ passthrough: true }) res: express.Response) {
+  async logout(@Res({ passthrough: true }) res: express.Response) {
     res.clearCookie('refreshToken');
     return { message: 'Logged out' };
   }

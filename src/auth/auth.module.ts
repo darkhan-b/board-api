@@ -14,14 +14,18 @@ import { JwtStrategy } from './jwt/jwt.strategy';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.get('JWT_ACCESS_SECRET'),
-        signOptions: { expiresIn: config.get('JWT_ACCESS_EXPIRES') },
-      }),
+      useFactory: (config: ConfigService) => {
+        const secret = config.get<string>('JWT_ACCESS_SECRET');
+        if (!secret) throw new Error('JWT_ACCESS_SECRET is not set');
+        return {
+          secret,
+          signOptions: { expiresIn: config.get('JWT_ACCESS_EXPIRES') || '15m' },
+        };
+      },
     }),
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],
-  exports: [JwtModule], 
+  exports: [JwtModule],
 })
 export class AuthModule {}

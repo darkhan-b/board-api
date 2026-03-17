@@ -7,16 +7,12 @@ import {
   Body,
   Param,
   Req,
-  UseGuards,
   BadRequestException,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @ApiTags('Tasks')
 @ApiBearerAuth('access-token')
@@ -38,29 +34,27 @@ export class TasksController {
 
   @Post()
   @ApiOperation({ summary: 'Создать задачу' })
-  @UseGuards(JwtAuthGuard)
   create(@Body() dto: CreateTaskDto, @Req() req: any) {
-    if (!req.user || !req.user.sub) {
-      throw new BadRequestException('Пользователь не найден в JWT');
-    }
-    const userId = req.user.sub;
+    const userId = req.user?.id; // <-- правильно
+    if (!userId) throw new BadRequestException('Пользователь не найден в JWT');
     return this.tasksService.create(dto, userId);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Обновить задачу' })
-  @UseGuards(JwtAuthGuard)
   update(@Param('id') id: string, @Body() dto: UpdateTaskDto, @Req() req: any) {
-    const userId = req.user.sub;
-    const userRole = req.user.role as Role;
-    return this.tasksService.update(+id, dto, userId, userRole);
+    const userId = req.user?.id;
+    const role = req.user?.role;
+    if (!userId) throw new BadRequestException('Пользователь не найден в JWT');
+    return this.tasksService.update(+id, dto, userId, role);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Удалить задачу' })
   remove(@Param('id') id: string, @Req() req: any) {
-    const userId = req.user.sub;
-    const userRole = req.user.role as Role;
-    return this.tasksService.remove(+id, userId, userRole);
+    const userId = req.user?.id;
+    const role = req.user?.role;
+    if (!userId) throw new BadRequestException('Пользователь не найден в JWT');
+    return this.tasksService.remove(+id, userId, role);
   }
 }

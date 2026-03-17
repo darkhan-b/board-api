@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsEnum, IsInt } from 'class-validator';
+import { IsString, IsNotEmpty, IsEnum, IsInt, IsOptional } from 'class-validator';
 import { TaskStatus } from '@prisma/client';
 
 export class CreateTaskDto {
@@ -8,14 +8,15 @@ export class CreateTaskDto {
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @IsString()
-  @IsNotEmpty()
-  description: string;
+  @IsOptional()
+  description?: string;
 
-  @ApiProperty({ enum: TaskStatus })
+  @ApiProperty({ enum: TaskStatus, required: false })
   @IsEnum(TaskStatus)
-  status: TaskStatus;
+  @IsOptional()
+  status?: TaskStatus;
 
   @ApiProperty()
   @IsInt()

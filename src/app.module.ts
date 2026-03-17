@@ -8,7 +8,8 @@ import { BoardsModule } from './boards/boards.module';
 import { UsersModule } from './users/users.module';
 import { TasksModule } from './tasks/tasks.module';
 import { AuthModule } from './auth/auth.module';
-import { JwtGuard } from './auth/guards/auth.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
+import { JwtGuard } from './auth/guards/jwt.guard';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { JwtGuard } from './auth/guards/auth.guard';
   providers: [
     AppService,
     { provide: APP_GUARD, useClass: JwtGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule {}

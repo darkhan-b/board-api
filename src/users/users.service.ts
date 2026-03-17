@@ -1,5 +1,4 @@
-// users.service.ts
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -29,14 +28,21 @@ export class UsersService {
     });
   }
 
-  findOne(id: number) {
+  findOne(id?: number) {
+    if (!id) throw new BadRequestException('ID пользователя отсутствует');
+
     return this.prisma.user.findUnique({
       where: { id },
       select: { id: true, email: true, role: true, tasks: true },
     });
   }
 
-  remove(id: number) {
+  async remove(id?: number) {
+    if (!id) throw new BadRequestException('ID пользователя отсутствует');
+
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) throw new NotFoundException('Пользователь не найден');
+
     return this.prisma.user.delete({
       where: { id },
       select: { id: true, email: true, role: true },

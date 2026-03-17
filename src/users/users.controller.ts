@@ -5,14 +5,13 @@ import {
   Delete,
   Body,
   Param,
-  UseGuards,
   ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { Authorized } from 'src/auth/decorators/authorized.decorator';
+import { Authorized } from '../auth/decorators/authorized.decorator';
+import { AuthorizedUser } from '../auth/decorators/authorized-user.decorator';
 
 @ApiTags('Users')
 @ApiBearerAuth('access-token')
@@ -24,6 +23,12 @@ export class UsersController {
   @ApiOperation({ summary: 'Получить всех пользователей' })
   findAll() {
     return this.usersService.findAll();
+  }
+
+  @Get('me')
+  @ApiOperation({ summary: 'Получить данные текущего пользователя' })
+  me(@AuthorizedUser() user: any) {
+    return this.usersService.findOne(user.id);
   }
 
   @Get(':id')
@@ -40,7 +45,10 @@ export class UsersController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Удалить пользователя (только ADMIN)' })
-  remove(@Param('id') id: string, @Authorized() user: any) {
+  async remove(
+    @Param('id') id: string,
+    @AuthorizedUser() user: any, 
+  ) {
     if (user.role !== 'ADMIN') {
       throw new ForbiddenException('Нет прав на удаление пользователя');
     }
