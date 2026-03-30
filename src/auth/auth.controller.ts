@@ -27,12 +27,10 @@ export class AuthController {
     res.cookie('refreshToken', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
+      sameSite: 'lax',
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 дней
     });
   }
-
-  // -------------------- Публичные маршруты --------------------
   @Public()
   @Post('register')
   async register(
@@ -56,7 +54,7 @@ export class AuthController {
     return { accessToken: tokens.accessToken };
   }
 
-  // -------------------- Защищённые маршруты --------------------
+  @Public()
   @Post('refresh')
   async refresh(
     @Req() req: express.Request,
@@ -83,6 +81,7 @@ export class AuthController {
     }
   }
 
+  @Public()
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: express.Response) {
     res.clearCookie('refreshToken');
