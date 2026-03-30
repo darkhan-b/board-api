@@ -36,19 +36,18 @@ export class UsersController {
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
-
   @Post()
-  @ApiOperation({ summary: 'Создать пользователя' })
-  create(@Body() dto: CreateUserDto) {
+  @ApiOperation({ summary: 'Создать пользователя (только ADMIN)' })
+  create(@Body() dto: CreateUserDto, @AuthorizedUser() user: any) {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenException('Нет прав на создание пользователя');
+    }
+
     return this.usersService.create(dto);
   }
-
   @Delete(':id')
   @ApiOperation({ summary: 'Удалить пользователя (только ADMIN)' })
-  async remove(
-    @Param('id') id: string,
-    @AuthorizedUser() user: any, 
-  ) {
+  async remove(@Param('id') id: string, @AuthorizedUser() user: any) {
     if (user.role !== 'ADMIN') {
       throw new ForbiddenException('Нет прав на удаление пользователя');
     }

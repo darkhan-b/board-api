@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as argon2 from 'argon2';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -8,7 +12,23 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateUserDto) {
-    if (!dto.password) throw new BadRequestException('Password is required');
+    if (!dto.email) {
+      throw new BadRequestException('Email обязателен');
+    }
+
+    if (!dto.password) {
+      throw new BadRequestException('Password обязателен');
+    }
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existingUser) {
+      throw new BadRequestException(
+        'Пользователь с таким email уже существует',
+      );
+    }
 
     const hashedPassword = await argon2.hash(dto.password);
 
@@ -22,26 +42,47 @@ export class UsersService {
     });
   }
 
-  findAll() {
-    return this.prisma.user.findMany({
+  async findAll() {
+    const users = await this.prisma.user.findMany({
       select: { id: true, email: true, role: true },
     });
+
+    if (!users.length) {
+      throw new NotFoundException('Пользователи не найдены');
+    }
+
+    return users;
   }
 
-  findOne(id?: number) {
-    if (!id) throw new BadRequestException('ID пользователя отсутствует');
+  async findOne(id?: number) {
+    if (!id) {
+      throw new BadRequestException('ID пользователя отсутствует');
+    }
 
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: { id },
       select: { id: true, email: true, role: true, tasks: true },
     });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    return user;
   }
 
   async remove(id?: number) {
-    if (!id) throw new BadRequestException('ID пользователя отсутствует');
+    if (!id) {
+      throw new BadRequestException('ID пользователя отсутствует');
+    }
 
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new NotFoundException('Пользователь не найден');
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
 
     return this.prisma.user.delete({
       where: { id },

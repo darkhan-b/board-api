@@ -7,14 +7,26 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-import { Role, TaskStatus } from '@prisma/client';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
   constructor(private prisma: PrismaService) {}
 
   async findAll() {
-    return this.prisma.task.findMany({ include: { user: true, board: true } });
+    return this.prisma.task.findMany({
+      include: {
+        board: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            name: true,
+          },
+        },
+      },
+    });
   }
 
   async findOne(id: number) {
