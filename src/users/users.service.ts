@@ -34,11 +34,12 @@ export class UsersService {
 
     return this.prisma.user.create({
       data: {
+        name: dto.name,
         email: dto.email,
         password: hashedPassword,
         role: dto.role,
       },
-      select: { id: true, email: true, role: true },
+      select: { id: true, email: true, role: true, name: true },
     });
   }
 
@@ -61,7 +62,7 @@ export class UsersService {
 
     const user = await this.prisma.user.findUnique({
       where: { id },
-      select: { id: true, email: true, role: true, tasks: true },
+      select: { name: true, id: true, email: true, role: true, tasks: true },
     });
 
     if (!user) {

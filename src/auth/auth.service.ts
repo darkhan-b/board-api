@@ -23,10 +23,18 @@ export class AuthService {
     const hash = await argon.hash(dto.password);
 
     const user = await this.prisma.user.create({
-      data: { email: dto.email, password: hash, role: Role.USER },
+      data: {
+        email: dto.email,
+        password: hash,
+        role: Role.USER,
+        name: dto.name,
+      },
     });
 
-    return this.generateTokens(user.id, user.email, user.role);
+    const tokens = await this.generateTokens(user.id, user.email, user.role, user.name ?? '');
+    return {
+      ...tokens,
+    };
   }
 
   async login(dto: AuthDto) {
@@ -38,15 +46,25 @@ export class AuthService {
     const pwMatches = await argon.verify(user.password, dto.password);
     if (!pwMatches) throw new ForbiddenException('Invalid credentials');
 
-    return this.generateTokens(user.id, user.email, user.role);
+    const tokens = await this.generateTokens(user.id, user.email, user.role,  user.name ?? '');
+    return {
+      ...tokens,
+      name: user.name,
+    };
   }
 
-  async refresh(userId: number, email: string, role: Role) {
-    return this.generateTokens(userId, email, role);
+  async refresh(userId: number, email: string, role: Role, name: string) {
+    const tokens = await this.generateTokens(userId, email, role, name);
+    return { ...tokens, name };
   }
 
-  private async generateTokens(userId: number, email: string, role: Role) {
-    const payload = { sub: userId, email, role };
+  private async generateTokens(
+    userId: number,
+    email: string,
+    role: Role,
+    name: string,
+  ) {
+    const payload = { id: userId, email, role, name };
     const accessToken = await this.jwt.signAsync(payload, {
       secret: this.config.get('JWT_ACCESS_SECRET'),
       expiresIn: this.config.get('JWT_ACCESS_EXPIRES'),

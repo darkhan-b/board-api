@@ -28,7 +28,7 @@ export class AuthController {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 дней
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
   }
   @Public()
@@ -39,7 +39,10 @@ export class AuthController {
   ) {
     const tokens = await this.authService.register(dto);
     this.setCookie(res, tokens.refreshToken);
-    return { accessToken: tokens.accessToken };
+    return {
+      accessToken: tokens.accessToken,
+      name: dto.name,
+    };
   }
 
   @Public()
@@ -51,7 +54,7 @@ export class AuthController {
   ) {
     const tokens = await this.authService.login(dto);
     this.setCookie(res, tokens.refreshToken);
-    return { accessToken: tokens.accessToken };
+    return { accessToken: tokens.accessToken, name: dto.name };
   }
 
   @Public()
@@ -69,13 +72,14 @@ export class AuthController {
       });
 
       const tokens = await this.authService.refresh(
-        payload.sub,
+        payload.id,
         payload.email,
         payload.role,
+        payload.name,
       );
       this.setCookie(res, tokens.refreshToken);
 
-      return { accessToken: tokens.accessToken };
+      return { accessToken: tokens.accessToken, name: tokens.name ?? '' };
     } catch {
       throw new ForbiddenException('Invalid refresh token');
     }
@@ -84,7 +88,11 @@ export class AuthController {
   @Public()
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: express.Response) {
-    res.clearCookie('refreshToken');
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+    });
     return { message: 'Logged out' };
   }
 }

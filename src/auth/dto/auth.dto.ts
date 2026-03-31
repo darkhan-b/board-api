@@ -6,4 +6,6 @@ export class AuthDto {
 
   @MinLength(6)
   password: string;
+
+  name: string;
 }
