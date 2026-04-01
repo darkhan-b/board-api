@@ -14,6 +14,7 @@ import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { Public } from './decorators/public.decorator';
+import { RegisterDto } from './dto/register.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -31,31 +32,28 @@ export class AuthController {
       expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
   }
-  @Public()
-  @Post('register')
-  async register(
-    @Body() dto: AuthDto,
-    @Res({ passthrough: true }) res: express.Response,
-  ) {
-    const tokens = await this.authService.register(dto);
-    this.setCookie(res, tokens.refreshToken);
-    return {
-      accessToken: tokens.accessToken,
-      name: dto.name,
-    };
-  }
+@Public()
+@Post('register')
+async register(
+  @Body() dto: RegisterDto,
+  @Res({ passthrough: true }) res: express.Response,
+) {
+  const { accessToken, refreshToken, name } = await this.authService.register(dto);
+  this.setCookie(res, refreshToken);
+  return { accessToken, name };
+}
 
-  @Public()
-  @Post('login')
-  @HttpCode(HttpStatus.OK)
-  async login(
-    @Body() dto: AuthDto,
-    @Res({ passthrough: true }) res: express.Response,
-  ) {
-    const tokens = await this.authService.login(dto);
-    this.setCookie(res, tokens.refreshToken);
-    return { accessToken: tokens.accessToken, name: dto.name };
-  }
+@Public()
+@Post('login')
+@HttpCode(HttpStatus.OK)
+async login(
+  @Body() dto: AuthDto,
+  @Res({ passthrough: true }) res: express.Response,
+) {
+  const { accessToken, refreshToken, name } = await this.authService.login(dto);
+  this.setCookie(res, refreshToken);
+  return { accessToken, name };
+}
 
   @Public()
   @Post('refresh')

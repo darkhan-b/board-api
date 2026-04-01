@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import * as argon from 'argon2';
 import { AuthDto } from './dto/auth.dto';
 import { Role } from '@prisma/client';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +15,7 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
-  async register(dto: AuthDto) {
+  async register(dto: RegisterDto) {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
@@ -31,9 +32,16 @@ export class AuthService {
       },
     });
 
-    const tokens = await this.generateTokens(user.id, user.email, user.role, user.name ?? '');
+    const tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      user.role,
+      user.name ?? '',
+    );
+
     return {
       ...tokens,
+      name: user.name,
     };
   }
 
@@ -46,7 +54,12 @@ export class AuthService {
     const pwMatches = await argon.verify(user.password, dto.password);
     if (!pwMatches) throw new ForbiddenException('Invalid credentials');
 
-    const tokens = await this.generateTokens(user.id, user.email, user.role,  user.name ?? '');
+    const tokens = await this.generateTokens(
+      user.id,
+      user.email,
+      user.role,
+      user.name ?? '',
+    );
     return {
       ...tokens,
       name: user.name,
